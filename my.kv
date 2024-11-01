@@ -1,0 +1,528 @@
+# Define the window manager logic
+WindowManager:
+    StartMenu:
+        name:'StartMenu'
+    FirstScreen:
+        name:"FirstScreen"
+    SecondScreen:
+        name:'Second'
+    ModelingInp:
+        name:'ModelingInp'
+    Predicted:
+        name:'Predicted'
+    Return:
+        name:'Return'
+
+
+
+<StartMenu>
+    name:'StartMenu'
+
+    # Create a grid layout with columns = 1 and adaptable width and height
+    GridLayout:
+        cols:1
+        rows:4
+        size: root.width , root.height
+
+        canvas.before:
+            Rectangle:
+                pos: self.pos
+                size: self.size
+                source: 'media/background.jpg'
+
+        BoxLayout:
+            orientation:'horizontal'
+            BoxLayout:
+                padding: [0, 185, 00, 0]
+                Image:
+                    source:"media/ieLogo.png"
+                    allow_stretch: True
+                    keep_ratio: True
+                    size_hint_y: 3
+            BoxLayout:
+                padding: [0, 185, 0, 0]
+                Image:
+                    source:"media/logo.png"
+                    allow_stretch: True
+                    keep_ratio: True
+                    size_hint_y: 3
+
+
+        BoxLayout:
+            padding: [50, 90, 50, 50] #Left, Up, Right, Down
+            Button:
+                background_color: 0,0,1,1
+                text:'Plot Prices'
+                on_release:
+                    app.root.current = 'FirstScreen'
+                    root.manager.transition.direction = 'left'
+
+        BoxLayout:
+            padding: [50, 90, 50, 50]
+            Button:
+                background_color: 0,0,1,1
+                text:'Model Future Prices'
+                on_release:
+                    app.root.current = 'ModelingInp'
+                    root.manager.transition.direction = 'left'
+
+        BoxLayout:
+            padding: [50, 90, 50, 50]
+            Button:
+                background_color: 0,0,1,1
+                text:'Calculate Return'
+                on_release:
+                    app.root.current = 'Return'
+                    root.manager.transition.direction = 'left'
+
+
+
+# Define the first screen logic and structure
+<FirstScreen>
+    name:'FirstScreen'
+
+    # Define the ticker and timeSpan variables
+    ticker:ticker
+    timeSpan:timeSpan
+
+    # Create a grid layout with columns = 1 and adaptable width and height
+    GridLayout:
+        cols:1
+        size: root.width , root.height
+
+        canvas.before:
+            Rectangle:
+                pos: self.pos
+                size: self.size
+                source: 'media/background.jpg'
+
+        # Create a nested grid layout to hold the text inputs and labels
+        GridLayout:
+            cols:1
+            rows:2
+
+            # Define a box layout to add padding to the first label and input
+            BoxLayout:
+                padding: [50, 90, 50, 90]
+
+                # Define the first label
+                Label:
+                    bold: True
+                    text:'Security Ticker: '
+                    size_hint_x: None
+                    width: self.texture_size[0] + 20
+                    valign: 'middle'
+
+                # Define a nested box layout to add padding to the text input so it aligns
+                # with the following text input
+                BoxLayout:
+                    padding: [230, 0, 0, 0]
+                    TextInput:
+                        # Set its id to the same of the variable ticker so the input is saved in it
+                        id:ticker
+                        multiline:False
+                        size_hint_y:None
+                        height: 65
+
+
+            # Define a box layout to add padding to the second label and input
+            BoxLayout:
+                padding: [50, 90, 50, 90]
+                # Define the second label with some line breaks to insert instructions
+                Label:
+                    bold: True
+                    text: 'Time Span: \n (yyyy-mm-dd,yyyy-mm-dd) \n (Please enter in chronological order)'
+                    valign: 'middle'
+                    size_hint_x: None
+                    width: self.texture_size[0] + 20
+
+                # Define a nested box layout to add padding to the text input so it aligns with the first
+                BoxLayout:
+                    padding: [30, 0, 0, 0]
+                    TextInput:
+                        # Set the input's id to the timeSpan variable name to relate them
+                        id:timeSpan
+                        multiline:False
+                        size_hint_y:None
+                        height: 65
+
+        # Define a box layout to add padding to the submit button
+        BoxLayout:
+            orientation:'vertical'
+            padding: [100, 100, 100, 100]
+            # Create the submit button
+            Button:
+                background_color: 0,0,1,1
+                size_hint_y: 3
+                text:'Submit'
+                # When the button is clicked run some actions
+                on_release:
+
+                    # Change the current screen to the second one if the output of the submit function in the
+                    # python file is not None. Else, stay in the first screen
+                    app.root.current = 'Second' if root.submit() != None else 'FirstScreen'
+
+                    # If there is a transition of screens, do it to the left
+                    root.manager.transition.direction = 'left'
+
+                    # Update the source of the image in the second screen to the output of the submit function in
+                    # the Python file if this function outputted something; if it did not, keep the source of the
+                    # image as an empty string
+                    root.manager.get_screen('Second').update_image_source(root.submit()) if root.submit() != None else ""
+
+            BoxLayout:
+                orientation:'vertical'
+                padding: [0, 10, 0, 0]
+                Button:
+                    background_color: 0,0,1,1
+                    text:'Return'
+                    # When the button is clicked run some actions
+                    on_release:
+                        app.root.current = 'StartMenu'
+
+                        # If there is a transition of screens, do it to the right
+                        root.manager.transition.direction = 'right'
+
+
+# Create the second screen logic and structure
+<SecondScreen>
+    name:'Second'
+
+
+    # Create a grid layout to hold the structure
+    GridLayout:
+        cols : 1
+
+        canvas.before:
+            Rectangle:
+                pos: self.pos
+                size: self.size
+                source: 'media/background.jpg'
+
+        # Define an image which source is initialized as empty. This source will be changed to the output of the
+        # submit function if this function did not encounter any error
+        # The image dimensions are changed for it to occupy the most space possible while keeping its ratios
+        Image:
+            id: image_display
+            source:""
+            allow_stretch: True
+            keep_ratio: True
+            size_hint_y: 3
+
+        # Create a box layout to add padding to the return button
+        BoxLayout:
+            padding: [20, 20, 20, 20]
+            Button:
+                background_color: 0,0,1,1
+                size_hint_y: None
+                height: '48dp'
+                text:'Return'
+
+                # If the return button is pressed, do some actions
+                on_release:
+
+                    # Change screen to the first one
+                    app.root.current = 'FirstScreen'
+
+                    # Make the transition to the right
+                    root.manager.transition.direction = 'right'
+
+
+# Screen to input the security to model
+<ModelingInp>
+    name : 'ModelingInp'
+
+    # Defining objects
+    ticker:ticker
+    horizon:horizon
+
+    GridLayout:
+        cols : 1
+
+        canvas.before:
+            Rectangle:
+                pos: self.pos
+                size: self.size
+                source: 'media/background.jpg'
+
+        BoxLayout:
+            padding: [50, 90, 50, 90]
+
+                # Define the first label
+            Label:
+                bold: True
+                text:'Security Ticker: '
+                size_hint_x: None
+                width: self.texture_size[0] + 20
+                valign: 'middle'
+
+                # Define a nested box layout to add padding to the text input so it aligns
+                # with the following text input
+            BoxLayout:
+                padding: [230, 0, 0, 0]
+                TextInput:
+                    # Set its id to the same of the variable ticker so the input is saved in it
+                    id:ticker
+                    multiline:False
+                    size_hint_y:None
+                    height: 75
+
+
+            # Define a box layout to add padding to the second label and input
+        BoxLayout:
+            padding: [50, 90, 50, 90]
+                # Define the second label with some line breaks to insert instructions
+            Label:
+                bold: True
+                text: 'Prediction Horizon: \n (Insert an integer for the number of DAYS)'
+                valign: 'middle'
+                size_hint_x: None
+                width: self.texture_size[0] + 20
+
+                # Define a nested box layout to add padding to the text input so it aligns with the first
+            BoxLayout:
+                padding: [30, 0, 0, 0]
+                TextInput:
+                    # Set the input's id to the timeSpan variable name to relate them
+                    id:horizon
+                    multiline:False
+                    size_hint_y:None
+                    height: 75
+
+        # Define a box layout to add padding to the submit button
+        BoxLayout:
+            orientation:'vertical'
+            padding: [100, 100, 100, 30]
+            # Create the submit button
+            Button:
+                background_color: 0,0,1,1
+                size_hint_y: 3
+                text:'Submit'
+                # When the button is clicked run some actions
+                on_release:
+                    root.submit()
+                    app.root.current = 'Predicted' if root.preds_path != None else 'ModelingInp'
+
+                    # If there is a transition of screens, do it to the left
+                    root.manager.transition.direction = 'left'
+
+                    # Update the source of the image in the second screen to the output of the submit function in
+                    # the Python file if this function outputted something; if it did not, keep the source of the
+                    # image as an empty string
+                    root.manager.get_screen('Predicted').update_image_source(root.preds_path) if root.preds_path != None else ""
+
+            BoxLayout:
+                orientation:'vertical'
+                padding: [0, 10, 0, 0]
+                Button:
+                    background_color: 0,0,1,1
+                    text:'Return'
+                    # When the button is clicked run some actions
+                    on_release:
+                        app.root.current = 'StartMenu'
+
+                        # If there is a transition of screens, do it to the right
+                        root.manager.transition.direction = 'right'
+
+
+
+<Predicted>
+    name:'Predicted'
+
+    # Create a grid layout to hold the structure
+    GridLayout:
+        cols : 1
+
+        canvas.before:
+            Rectangle:
+                pos: self.pos
+                size: self.size
+                source: 'media/background.jpg'
+
+        # Define an image which source is initialized as empty. This source will be changed to the output of the
+        # submit function if this function did not encounter any error
+        # The image dimensions are changed for it to occupy the most space possible while keeping its ratios
+        Image:
+            id: image_display
+            source:""
+            allow_stretch: True
+            keep_ratio: True
+            size_hint_y: 3
+
+        # Create a box layout to add padding to the return button
+        BoxLayout:
+            padding: [20, 20, 20, 20]
+            Button:
+                background_color: 0,0,1,1
+                size_hint_y: None
+                height: '48dp'
+                text:'Return'
+
+                # If the return button is pressed, do some actions
+                on_release:
+
+                    # Change screen to the first one
+                    app.root.current = 'ModelingInp'
+
+                    # Make the transition to the right
+                    root.manager.transition.direction = 'right'
+
+
+
+<Return>
+    name:'Return'
+
+    # Define the ticker and timeSpan variables
+    ticker:ticker
+    timeSpan:timeSpan
+
+    # Create a grid layout with columns = 1 and adaptable width and height
+    GridLayout:
+        cols:1
+        size: root.width , root.height
+
+        canvas.before:
+            Rectangle:
+                pos: self.pos
+                size: self.size
+                source: 'media/background.jpg'
+
+        # Create a nested grid layout to hold the text inputs and labels
+        GridLayout:
+            cols:1
+            rows:2
+
+            # Define a box layout to add padding to the first label and input
+            BoxLayout:
+                padding: [50, 90, 50, 90]
+
+                # Define the first label
+                Label:
+                    bold: True
+                    text:'Security Ticker: '
+                    size_hint_x: None
+                    width: self.texture_size[0] + 20
+                    valign: 'middle'
+
+                # Define a nested box layout to add padding to the text input so it aligns
+                # with the following text input
+                BoxLayout:
+                    padding: [230, 0, 0, 0]
+                    TextInput:
+                        # Set its id to the same of the variable ticker so the input is saved in it
+                        id:ticker
+                        multiline:False
+                        size_hint_y:None
+                        height: 65
+
+
+            # Define a box layout to add padding to the second label and input
+            BoxLayout:
+                padding: [50, 90, 50, 90]
+                # Define the second label with some line breaks to insert instructions
+                Label:
+                    bold: True
+                    text: 'Time Span: \n (yyyy-mm-dd,yyyy-mm-dd) \n (Please enter in chronological order)'
+                    valign: 'middle'
+                    size_hint_x: None
+                    width: self.texture_size[0] + 20
+
+                # Define a nested box layout to add padding to the text input so it aligns with the first
+                BoxLayout:
+                    padding: [30, 0, 0, 0]
+                    TextInput:
+                        # Set the input's id to the timeSpan variable name to relate them
+                        id:timeSpan
+                        multiline:False
+                        size_hint_y:None
+                        height: 65
+
+        # Define a box layout to add padding to the submit button
+        BoxLayout:
+            orientation:'vertical'
+            padding: [100, 100, 100, 100]
+            # Create the submit button
+            Button:
+                background_color: 0,0,1,1
+                size_hint_y: 3
+                text:'Submit'
+                # When the button is clicked run some actions
+                on_release:
+                    root.submit()
+
+            BoxLayout:
+                orientation:'vertical'
+                padding: [0, 10, 0, 0]
+                Button:
+                    background_color: 0,0,1,1
+                    text:'Return'
+                    # When the button is clicked run some actions
+                    on_release:
+                        app.root.current = 'StartMenu'
+
+                        # If there is a transition of screens, do it to the right
+                        root.manager.transition.direction = 'right'
+
+
+
+<PReturn>
+    #secReturn:secReturn
+    #sec:sec
+    title:'Security Return'
+    size: 1000, 550
+    BoxLayout:
+        orientation: 'vertical'
+        BoxLayout:
+            padding: [50, 0, 50, 50]
+            Label:
+                text: f'The return of {root.sec} during the inserted time span is:  \n  \n     {root.secReturn}%'
+                halign: 'left'  # Align text to the left
+                valign: 'center'  # Adjust vertical alignment as needed
+                #text_size: self.width, None  # Allow for proper text wrapping and alignment
+                #size_hint_y: None
+                #height: self.texture_size[1]  # Adjust the height to fit the text
+                #pos_hint: {'x': 0.1}
+
+
+
+
+# Define the structure of the first pop-up window
+<P>
+    Label:
+        text:'Incorrect Format Values were inserted'
+        size_hint: 0.6 , 0.2
+        pos_hint: {'x':0.2 , 'top':0.9}
+
+    Label:
+        text:'Please, check the format of the values'
+        size_hint: 0.8 , 0.2
+        pos_hint: {'x':0.1 , 'y':0.3}
+
+
+
+
+# Define the structure of the second pop-up window
+<P2>
+    Label:
+        text:'Incorrect Dates were inserted'
+        size_hint: 0.6 , 0.2
+        pos_hint: {'x':0.2 , 'top':0.9}
+
+    Label:
+        text:'Please, check that the dates are in correct order and that they are in the timespan of the stock'
+        size_hint: 0.8 , 0.2
+        pos_hint: {'x':0.1 , 'y':0.3}
+
+
+# Define the structure of the third pop-up window
+<P3>
+    Label:
+        text:'The inserted security is not in the DataBase'
+        size_hint: 0.6 , 0.2
+        pos_hint: {'x':0.2 , 'top':0.9}
+
+    Label:
+        text:'Sorry for the inconvinience'
+        size_hint: 0.8 , 0.2
+        pos_hint: {'x':0.1 , 'y':0.3}
+
